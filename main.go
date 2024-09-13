@@ -123,13 +123,12 @@ func main() {
 				package2Names = append(package2Names, pkg.Name)
 			}
 
-			fmt.Println(package2Names[:5], package1Names[:5])
-
 			if reflect.DeepEqual(package1Names, package2Names) {
 				fmt.Println("OK")
 			} else {
-				diff1 := difference(package1Names, package2Names)
-				diff2 := difference(package2Names, package1Names)
+				diff1 := difference(package1Names[:5], package2Names[:5])
+				diff2 := difference(package2Names[:5], package1Names[:5])
+
 				var diff1Packages, diff2Packages []Package
 
 				for _, pkgName := range diff1 {
@@ -151,8 +150,27 @@ func main() {
 				jsonData1, _ := json.MarshalIndent(diff1Packages, "", "  ")
 				jsonData2, _ := json.MarshalIndent(diff2Packages, "", "  ")
 
-				fmt.Println(string(jsonData1))
-				fmt.Println(string(jsonData2))
+				file1, err := os.Create("difference1.json")
+				if err != nil {
+					fmt.Println("Ошибка при создании файла:", err)
+				}
+				defer file1.Close()
+
+				_, err = file1.Write(jsonData1)
+				if err != nil {
+					fmt.Println("Ошибка при записи в файл:", err)
+				}
+
+				file2, err := os.Create("difference2.json")
+				if err != nil {
+					fmt.Println("Ошибка при создании файла:", err)
+				}
+				defer file2.Close()
+
+				_, err = file2.Write(jsonData2)
+				if err != nil {
+					fmt.Println("Ошибка при записи в файл:", err)
+				}
 
 			}
 		},
