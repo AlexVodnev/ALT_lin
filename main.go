@@ -126,8 +126,8 @@ func main() {
 			if reflect.DeepEqual(package1Names, package2Names) {
 				fmt.Println("OK")
 			} else {
-				diff1 := difference(package1Names[:5], package2Names[:5])
-				diff2 := difference(package2Names[:5], package1Names[:5])
+				diff1 := difference(package1Names, package2Names)
+				diff2 := difference(package2Names, package1Names)
 
 				var diff1Packages, diff2Packages []Package
 
