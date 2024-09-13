@@ -7,6 +7,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"reflect"
 
 	"github.com/spf13/cobra"
 )
@@ -26,6 +27,23 @@ type Data struct {
 	RequestArgs map[string]interface{} `json:"request_args"`
 	Length      int                    `json:"length"`
 	Packages    []Package              `json:"packages"`
+}
+
+func difference(a, b []string) []string {
+	diff := []string{}
+	m := make(map[string]bool)
+
+	for _, val := range a {
+		m[val] = true
+	}
+
+	for _, val := range b {
+		if !m[val] {
+			diff = append(diff, val)
+		}
+	}
+
+	return diff
 }
 
 func main() {
@@ -94,20 +112,49 @@ func main() {
 				package1Names = append(package1Names, pkg.Name)
 			}
 
-			fmt.Println(package1Names[:5])
-
 			err = json.Unmarshal(data2, &dataStruct2)
 			if err != nil {
 				fmt.Println("Ошибка при разборе JSON:", err)
 			}
-			packages2 := dataStruct1.Packages
+			packages2 := dataStruct2.Packages
 
 			var package2Names []string
 			for _, pkg := range packages2 {
 				package2Names = append(package2Names, pkg.Name)
 			}
 
-			fmt.Println(package2Names[:5])
+			fmt.Println(package2Names[:5], package1Names[:5])
+
+			if reflect.DeepEqual(package1Names, package2Names) {
+				fmt.Println("OK")
+			} else {
+				diff1 := difference(package1Names, package2Names)
+				diff2 := difference(package2Names, package1Names)
+				var diff1Packages, diff2Packages []Package
+
+				for _, pkgName := range diff1 {
+					for _, pkg := range packages1 {
+						if pkgName == pkg.Name {
+							diff1Packages = append(diff1Packages, pkg)
+						}
+					}
+				}
+
+				for _, pkgName := range diff2 {
+					for _, pkg := range packages2 {
+						if pkgName == pkg.Name {
+							diff2Packages = append(diff2Packages, pkg)
+						}
+					}
+				}
+
+				jsonData1, _ := json.MarshalIndent(diff1Packages, "", "  ")
+				jsonData2, _ := json.MarshalIndent(diff2Packages, "", "  ")
+
+				fmt.Println(string(jsonData1))
+				fmt.Println(string(jsonData2))
+
+			}
 		},
 	}
 
